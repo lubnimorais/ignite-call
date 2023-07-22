@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useRouter } from 'next/router';
 
 import { Button, Text, TextInput } from '@ignite-ui/react';
 
@@ -22,24 +23,29 @@ const claimUsernameFormSchema = z.object({
 });
 
 interface IClaimUsernameFormData
-  extends z.infer<typeof claimUsernameFormSchema> {}
+  extends z.infer<typeof claimUsernameFormSchema> { }
 
 // ou assim
 // type IClaimUsernameFormData = z.infer<typeof claimUsernameFormSchema>;
 
 const ClaimUsernameForm = () => {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<IClaimUsernameFormData>({
     resolver: zodResolver(claimUsernameFormSchema),
   });
 
   // FUNCTIONS
-  const handleClaimUsername = useCallback((data: IClaimUsernameFormData) => {
-    console.log(data);
-  }, []);
+  const handleClaimUsername = useCallback(
+    async ({ username }: IClaimUsernameFormData) => {
+      await router.push(`/register?username=${username}`);
+    },
+    [router],
+  );
   // END FUNCTION
 
   return (
@@ -51,7 +57,7 @@ const ClaimUsernameForm = () => {
           placeholder="seu-usuário"
           {...register('username')}
         />
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" disabled={isSubmitting}>
           Reservar
           <ArrowRight />
         </Button>
