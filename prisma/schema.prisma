@@ -31,10 +31,10 @@ model User {
 // PORÉM O USUÁRIO É O MESMO
 model Account {
   id                  String  @id @default(cuid())
-  user_id             String
+  user_id             String  @map("user_id")
   type                String
   provider            String
-  provider_account_id String
+  provider_account_id String  @map("provider_account_id")
   refresh_token       String?
   access_token        String?
   expires_at          Int?
