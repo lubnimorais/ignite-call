@@ -10,7 +10,7 @@ import { RegisterContainer, RegisterHeader } from '../styles';
 import { AuthError, ConnectBox, ConnectItem } from './styles';
 import { useCallback } from 'react';
 
-export default function Register() {
+export default function ConnectCalendar() {
   const session = useSession();
   const router = useRouter();
 
