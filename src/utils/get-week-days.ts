@@ -1,4 +1,4 @@
-function getWeekDay() {
+export function getWeekDay() {
   const formatter = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'long',
   });
@@ -12,5 +12,3 @@ function getWeekDay() {
       return weekDay.substring(0, 1).toUpperCase().concat(weekDay.substring(1));
     });
 }
-
-export { getWeekDay };

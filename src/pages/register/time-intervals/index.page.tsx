@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 
+import { useRouter } from 'next/router';
+
 import {
   Button,
   Checkbox,
@@ -11,17 +13,23 @@ import {
 
 import {
   Controller,
-  FormSubmitHandler,
+  SubmitHandler,
   useFieldArray,
   useForm,
 } from 'react-hook-form';
 
 import { z as zod } from 'zod';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import { ArrowRight } from 'phosphor-react';
+
+import { getWeekDay } from '@/utils/get-week-days';
+import { convertTimeStringToMinutes } from '@/utils/convert-time-string-to-minutes';
 
 import {
   Container,
+  FormError,
   IntervalBox,
   IntervalDay,
   IntervalHeader,
@@ -29,13 +37,54 @@ import {
   IntervalItem,
   IntervalsContainer,
 } from './styles';
-import { getWeekDay } from '@/utils/get-week-days';
+import { api } from '@/lib/axios';
 
 const timeIntervalsFormSchema = zod.object({
-  name: zod.string(),
+  intervals: zod
+    .array(
+      zod.object({
+        weekDay: zod.number().min(0).max(6),
+        enabled: zod.boolean(),
+        startTime: zod.string(),
+        endTime: zod.string(),
+      }),
+    )
+    .length(7)
+    .transform(intervals => intervals.filter(interval => interval.enabled))
+    .refine(intervals => intervals.length > 0, {
+      message: 'Você precisa selecionar pelo menos um dia da semana!',
+    })
+    .transform(intervals => {
+      return intervals.map(interval => {
+        return {
+          weekDay: interval.weekDay,
+          startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
+          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
+        };
+      });
+    })
+    .refine(
+      intervals => {
+        return intervals.every(
+          interval =>
+            interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
+        );
+      },
+      {
+        message:
+          'O horário de término deve ser pelo menos 1h distante do início',
+      },
+    ),
 });
 
+type TimeIntervalsFormInputs = zod.input<typeof timeIntervalsFormSchema>;
+
+// faz a mesma coisa que o infer, mas é mais semântico de ler
+type TimeIntervalsFormOutput = zod.output<typeof timeIntervalsFormSchema>;
+
 export default function TimeIntervals() {
+  const router = useRouter();
+
   // HOOK FORM
   const {
     register,
@@ -43,7 +92,8 @@ export default function TimeIntervals() {
     watch,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<TimeIntervalsFormInputs>({
+    resolver: zodResolver(timeIntervalsFormSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -68,8 +118,16 @@ export default function TimeIntervals() {
   const weekDays = getWeekDay();
 
   // FUNCTION
-  const handleSetTimeIntervals: FormSubmitHandler =
-    useCallback(async () => {}, []);
+  const handleSetTimeIntervals: SubmitHandler<any> = useCallback(
+    async data => {
+      const { intervals } = data as TimeIntervalsFormOutput;
+
+      await api.post('/users/time-intervals', { intervals });
+
+      await router.push('/register/update-profile');
+    },
+    [router],
+  );
   // END FUNCTION
 
   return (
@@ -128,7 +186,11 @@ export default function TimeIntervals() {
           ))}
         </IntervalsContainer>
 
-        <Button type="submit">
+        {errors.intervals && (
+          <FormError size="sm">{errors.intervals.message}</FormError>
+        )}
+
+        <Button type="submit" disabled={isSubmitting}>
           Próximo passo
           <ArrowRight />
         </Button>
