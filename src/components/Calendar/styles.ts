@@ -17,6 +17,8 @@ export const CalendarHeader = styled('div', {
 export const CalendarTitle = styled(Text, {
   fontWeight: '$medium',
 
+  textTransform: 'capitalize',
+
   span: {
     color: '$gray200',
   },
@@ -83,4 +85,35 @@ export const CalendarBody = styled('table', {
   },
 });
 
-export const CalendarDay = styled('button', {});
+export const CalendarDay = styled('button', {
+  all: 'unset',
+
+  width: '100%',
+
+  // Para ter a mesma largura e altura
+  aspectRatio: '1 / 1',
+
+  background: '$gray600',
+
+  textAlign: 'center',
+
+  cursor: 'pointer',
+
+  borderRadius: '$sm',
+
+  '&:disabled': {
+    background: 'none',
+
+    cursor: 'default',
+
+    opacity: 0.4,
+  },
+
+  '&:not(:disabled):hover': {
+    background: '$gray500',
+  },
+
+  '&:focus': {
+    boxShadow: '0 0 0 2px $colors$gray100',
+  },
+});
