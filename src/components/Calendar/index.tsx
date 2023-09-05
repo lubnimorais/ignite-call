@@ -15,6 +15,16 @@ import {
 
 import { getWeekDay } from '@/utils/get-week-days';
 
+interface ICalendarWeek {
+  week: number;
+  days: Array<{
+    date: dayjs.Dayjs;
+    disabled: boolean;
+  }>;
+}
+
+type CalendarWeeks = ICalendarWeek[];
+
 export function Calendar() {
   const [currentDate, setCurrentDate] = useState(() => {
     // setando o dia 1
@@ -35,6 +45,7 @@ export function Calendar() {
       return currentDate.set('date', index + 1);
     });
 
+    // DIAS DO MÊS ANTERIOR
     const firstWeekDay = currentDate.get('day');
 
     const previousMonthFillArray = Array.from({
@@ -44,8 +55,61 @@ export function Calendar() {
         return currentDate.subtract(index + 1, 'day');
       })
       .reverse(); // REVERTE O ARRAY
+    // -------
 
-    return [...previousMonthFillArray, ...daysInMonthArray];
+    // DIAS DO PRÓXIMO MÊS
+    const lastDayInCurrentMonth = currentDate.set(
+      'date',
+      currentDate.daysInMonth(),
+    );
+    const lastWeekDay = lastDayInCurrentMonth.get('day');
+
+    const nextMonthFillArray = Array.from({
+      length: 7 - (lastWeekDay + 1),
+    }).map((_, index) => {
+      return lastDayInCurrentMonth.add(index + 1, 'day');
+    });
+    // -------
+
+    const calendarDays = [
+      ...previousMonthFillArray.map(date => {
+        return {
+          date,
+          disabled: true,
+        };
+      }),
+      ...daysInMonthArray.map(date => {
+        return {
+          date,
+          disabled: false,
+        };
+      }),
+      ...nextMonthFillArray.map(date => {
+        return {
+          date,
+          disabled: true,
+        };
+      }),
+    ];
+
+    // DIVIDIR OS DIAS EM SEMANAS
+    const calendarWeeks = calendarDays.reduce<CalendarWeeks>(
+      (weeks, _, index, calendarWeeksOriginal) => {
+        const isNewWeek = index % 7 === 0;
+
+        if (isNewWeek) {
+          weeks.push({
+            week: index / 7 + 1,
+            days: calendarWeeksOriginal.slice(index, index + 7),
+          });
+        }
+
+        return weeks;
+      },
+      [],
+    );
+
+    return calendarWeeks;
   }, [currentDate]);
   // END MEMO
 
@@ -93,21 +157,21 @@ export function Calendar() {
         </thead>
 
         <tbody>
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>
-              <CalendarDay>1</CalendarDay>
-            </td>
-            <td>
-              <CalendarDay>2</CalendarDay>
-            </td>
-            <td>
-              <CalendarDay>3</CalendarDay>
-            </td>
-          </tr>
+          {calendarWeeks.map(({ week, days }) => {
+            return (
+              <tr key={week}>
+                {days.map(({ date, disabled }) => {
+                  return (
+                    <td key={date.toString()}>
+                      <CalendarDay disabled={disabled}>
+                        {date.get('date')}
+                      </CalendarDay>
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </CalendarBody>
     </CalendarContainer>
