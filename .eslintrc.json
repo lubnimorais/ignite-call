@@ -4,6 +4,7 @@
     "@rocketseat/eslint-config/react"
   ],
   "rules": {
+    "camelcase": "off",
     "prettier/prettier": ["error", {
       "printWidth": 80,
       "tabWidth": 2,

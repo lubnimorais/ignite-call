@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { useRouter } from 'next/router';
+
 import dayjs from 'dayjs';
 
 import { CaretLeft, CaretRight } from 'phosphor-react';
@@ -14,6 +16,8 @@ import {
 } from './styles';
 
 import { getWeekDay } from '@/utils/get-week-days';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/axios';
 
 interface ICalendarWeek {
   week: number;
@@ -25,7 +29,20 @@ interface ICalendarWeek {
 
 type CalendarWeeks = ICalendarWeek[];
 
-export function Calendar() {
+interface IBlockedDates {
+  blockedWeekDays: number[];
+}
+
+interface ICalendarProps {
+  selectedDate: Date | null;
+  onDateSelected: (date: Date) => void;
+}
+
+export function Calendar({ selectedDate, onDateSelected }: ICalendarProps) {
+  const router = useRouter();
+
+  const username = String(router.query.username);
+
   const [currentDate, setCurrentDate] = useState(() => {
     // setando o dia 1
     return dayjs().set('date', 1);
@@ -35,6 +52,22 @@ export function Calendar() {
 
   const currentMonth = currentDate.format('MMMM');
   const currentYear = currentDate.format('YYYY');
+
+  // USE QUERY
+  const { data: blockedDates } = useQuery<IBlockedDates>(
+    ['blocked-dates', currentDate.get('year'), currentDate.get('month')],
+    async () => {
+      const response = await api.get(`/users/${username}/blocked-date`, {
+        params: {
+          year: currentDate.get('year'),
+          month: currentDate.get('month'),
+        },
+      });
+
+      return response.data;
+    },
+  );
+  // END USE QUERY
 
   // MEMO
   const calendarWeeks = useMemo(() => {
@@ -81,7 +114,9 @@ export function Calendar() {
       ...daysInMonthArray.map(date => {
         return {
           date,
-          disabled: false,
+          disabled:
+            date.endOf('day').isBefore(new Date()) ||
+            blockedDates?.blockedWeekDays.includes(date.get('day')),
         };
       }),
       ...nextMonthFillArray.map(date => {
@@ -110,10 +145,8 @@ export function Calendar() {
     );
 
     return calendarWeeks;
-  }, [currentDate]);
+  }, [currentDate, blockedDates]);
   // END MEMO
-
-  console.log(calendarWeeks);
 
   // FUNCTIONS
   const handlePreviousMonth = useCallback(() => {
@@ -163,7 +196,10 @@ export function Calendar() {
                 {days.map(({ date, disabled }) => {
                   return (
                     <td key={date.toString()}>
-                      <CalendarDay disabled={disabled}>
+                      <CalendarDay
+                        disabled={disabled}
+                        onClick={() => onDateSelected(date.toDate())}
+                      >
                         {date.get('date')}
                       </CalendarDay>
                     </td>
