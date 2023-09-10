@@ -91,9 +91,14 @@ export default async function handle(
 
   const availableTimes = possibleTimes.filter(time => {
     // manter apenas quando não existe
-    return !blockedTimes.some(
+    const isTimeBlocked = !blockedTimes.some(
       blockedTime => blockedTime.date.getHours() === time,
     );
+
+    // verifica horário se já passou
+    const isTimeInPast = referenceDate.set('hour', time).isBefore(new Date());
+
+    return !isTimeBlocked && !isTimeInPast;
   });
 
   return res.json({ possibleTimes, availableTimes });

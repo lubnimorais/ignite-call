@@ -31,6 +31,7 @@ type CalendarWeeks = ICalendarWeek[];
 
 interface IBlockedDates {
   blockedWeekDays: number[];
+  blockedDates: number[];
 }
 
 interface ICalendarProps {
@@ -57,10 +58,13 @@ export function Calendar({ selectedDate, onDateSelected }: ICalendarProps) {
   const { data: blockedDates } = useQuery<IBlockedDates>(
     ['blocked-dates', currentDate.get('year'), currentDate.get('month')],
     async () => {
+      const year = currentDate.get('year');
+      const month = String(currentDate.get('month') + 1).padStart(2, '0');
+
       const response = await api.get(`/users/${username}/blocked-date`, {
         params: {
-          year: currentDate.get('year'),
-          month: currentDate.get('month'),
+          year,
+          month,
         },
       });
 
@@ -71,6 +75,10 @@ export function Calendar({ selectedDate, onDateSelected }: ICalendarProps) {
 
   // MEMO
   const calendarWeeks = useMemo(() => {
+    if (!blockedDates) {
+      return [];
+    }
+
     // QUANTOS DIAS EXISTE NO MÊS ATUAL
     const daysInMonthArray = Array.from({
       length: currentDate.daysInMonth(),
@@ -116,7 +124,8 @@ export function Calendar({ selectedDate, onDateSelected }: ICalendarProps) {
           date,
           disabled:
             date.endOf('day').isBefore(new Date()) ||
-            blockedDates?.blockedWeekDays.includes(date.get('day')),
+            blockedDates.blockedWeekDays.includes(date.get('day')) ||
+            blockedDates.blockedDates.includes(date.get('date')),
         };
       }),
       ...nextMonthFillArray.map(date => {

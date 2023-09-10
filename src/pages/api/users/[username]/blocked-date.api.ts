@@ -38,5 +38,31 @@ export default async function handle(
     );
   });
 
-  return res.json({ blockedWeekDays });
+  // DATE_FORMAT é um método que existe dentro do SQL
+  // Tudo que tiver no GROUP BY tem que estar no SELECT obrigatoriamente
+  // O dia da semana no MySql começa com 1. No JavaScript começa com 0
+  const blockedDatesRaw: Array<{ date: number }> = await prismaClient.$queryRaw`
+    SELECT 
+      EXTRACT(DAY FROM S.date) AS date,
+      COUNT(S.date) AS amount,
+      ((UTI.time_end_in_minutes - UTI.time_start_in_minutes) / 60) AS size
+
+    FROM schedulings S
+
+    -- Quantos horário disponíveis nesse horário
+    LEFT JOIN user_time_intervals UTI
+      ON UTI.week_day = WEEKDAY(DATE_ADD(S.date, INTERVAL 1 DAY))
+
+    WHERE S.user_id = ${user.id}
+      AND DATE_FORMAT(S.date, "%Y-%m") = ${`${year}-${month}`}
+
+    GROUP BY EXTRACT(DAY FROM S.date),
+      ((UTI.time_end_in_minutes - UTI.time_start_in_minutes) / 60)
+
+    HAVING amount >= size
+  `;
+
+  const blockedDates = blockedDatesRaw.map(item => item.date);
+
+  return res.json({ blockedWeekDays, blockedDates });
 }
