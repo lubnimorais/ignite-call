@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 
 import { useRouter } from 'next/router';
 
+import { NextSeo } from 'next-seo';
+
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { z as zod } from 'zod';
@@ -62,42 +64,46 @@ export default function UpdateProfile() {
   // END FUNCTIONS
 
   return (
-    <UpdateProfileContainer>
-      <UpdateProfileHeader>
-        <Heading as="strong">Bem vindo ao Ignite Call!</Heading>
-        <Text>
-          Precisamos de algumas informações para criar seu perfil! Ah, você pode
-          editar essas informações depois
-        </Text>
+    <>
+      <NextSeo title="Atualize seu perfil | Ignite Call" noindex />
 
-        <MultiStep size={4} currentStep={4} />
-      </UpdateProfileHeader>
+      <UpdateProfileContainer>
+        <UpdateProfileHeader>
+          <Heading as="strong">Bem vindo ao Ignite Call!</Heading>
+          <Text>
+            Precisamos de algumas informações para criar seu perfil! Ah, você
+            pode editar essas informações depois
+          </Text>
 
-      <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
-        <label>
-          <Text size="sm">Foto de perfil</Text>
+          <MultiStep size={4} currentStep={4} />
+        </UpdateProfileHeader>
 
-          <Avatar
-            src={session.data?.user.avatar_url}
-            alt={session.data?.user.name}
-          />
-        </label>
+        <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
+          <label>
+            <Text size="sm">Foto de perfil</Text>
 
-        <label>
-          <Text size="sm">Sobre você</Text>
+            <Avatar
+              src={session.data?.user.avatar_url}
+              alt={session.data?.user.name}
+            />
+          </label>
 
-          <TextArea {...register('bio')} />
-          <FormAnnotation size="sm">
-            Fale um pouco sobre você. Isto será exibido em sua página pessoal.
-          </FormAnnotation>
-        </label>
+          <label>
+            <Text size="sm">Sobre você</Text>
 
-        <Button type="submit" disabled={isSubmitting}>
-          Finalizar
-          <ArrowRight />
-        </Button>
-      </ProfileBox>
-    </UpdateProfileContainer>
+            <TextArea {...register('bio')} />
+            <FormAnnotation size="sm">
+              Fale um pouco sobre você. Isto será exibido em sua página pessoal.
+            </FormAnnotation>
+          </label>
+
+          <Button type="submit" disabled={isSubmitting}>
+            Finalizar
+            <ArrowRight />
+          </Button>
+        </ProfileBox>
+      </UpdateProfileContainer>
+    </>
   );
 }
 

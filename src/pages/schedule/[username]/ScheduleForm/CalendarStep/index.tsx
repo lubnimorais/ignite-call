@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import dayjs from 'dayjs';
 
@@ -22,7 +22,11 @@ interface IAvailability {
   availableTimes: number[];
 }
 
-export function CalendarStep() {
+interface ICalendarStepProps {
+  onSelectDateTime: (date: Date) => void;
+}
+
+export function CalendarStep({ onSelectDateTime }: ICalendarStepProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   // const [availability, setAvailability] = useState<IAvailability | null>(null);
 
@@ -57,6 +61,21 @@ export function CalendarStep() {
     },
   );
 
+  // FUNCTIONS
+  const handleSelectTime = useCallback(
+    (hour: number) => {
+      // startOf -> começo da hora, coloca minutos, segundos, milésimos com 0
+      const dateWithTime = dayjs(selectedDate)
+        .set('hour', hour)
+        .startOf('hour')
+        .toDate();
+
+      onSelectDateTime(dateWithTime);
+    },
+    [selectedDate, onSelectDateTime],
+  );
+  // END FUNCTIONS
+
   return (
     <Container isTimePickerOpen={isDateSelected}>
       <Calendar selectedDate={selectedDate} onDateSelected={setSelectedDate} />
@@ -73,6 +92,9 @@ export function CalendarStep() {
                 <TimePickerItem
                   key={hour}
                   disabled={!availability.availableTimes.includes(hour)}
+                  onClick={() => {
+                    handleSelectTime(hour);
+                  }}
                 >
                   {String(hour).padStart(2, '0')}:00h
                 </TimePickerItem>
