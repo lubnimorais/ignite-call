@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -49,11 +50,13 @@ model Account {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([provider, provider_account_id])
+  @@index([user_id])
   @@map("accounts")
 }
 
 // CADA VEZ QUE O USUÁRIO FIZER LOGIN EM UMA MÁQUINA DIFERENTE
 // VAMOS TER UMA SESSÃO
+
 model Session {
   id            String   @id @default(cuid())
   session_token String   @unique
@@ -61,6 +64,7 @@ model Session {
   expires       DateTime
   user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([user_id])
   @@map("sessions")
 }
 
@@ -75,6 +79,7 @@ model UserTimeInterval {
   // RELATIONS
   user User @relation(fields: [user_id], references: [id])
 
+  @@index([user_id])
   @@map("user_time_intervals")
 }
 
@@ -90,5 +95,6 @@ model Scheduling {
   // RELATIONS
   user User @relation(fields: [user_id], references: [id])
 
+  @@index([user_id])
   @@map("schedulings")
 }
