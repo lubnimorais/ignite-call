@@ -23,7 +23,7 @@ const claimUsernameFormSchema = z.object({
 });
 
 interface IClaimUsernameFormData
-  extends z.infer<typeof claimUsernameFormSchema> { }
+  extends z.infer<typeof claimUsernameFormSchema> {}
 
 // ou assim
 // type IClaimUsernameFormData = z.infer<typeof claimUsernameFormSchema>;
